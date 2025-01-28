@@ -1,42 +1,3 @@
-// Faux API item data
-const item_options = [
-  {
-    id: 1,
-    item_name: 'Coca-Cola',
-    price_per_item: 0.70,
-    is_weighed_item: false,
-    price_per_weight: 0
-  },
-  {
-    id: 2,
-    item_name: 'Beans',
-    price_per_item: 0.50,
-    is_weighed_item: false,
-    price_per_weight: 0
-  },
-  {
-    id: 3,
-    item_name: 'Onions',
-    price_per_item: 0,
-    is_weighed_item: true,
-    price_per_weight: 0.29
-  },
-  {
-    id: 4,
-    item_name: 'Ale',
-    price_per_item: 2.50,
-    is_weighed_item: false,
-    price_per_weight: 0
-  },
-  {
-    id: 5,
-    item_name: 'Oranges',
-    price_per_item: 0,
-    is_weighed_item: true,
-    price_per_weight: 1.99
-  }
-];
-
 window.addEventListener('DOMContentLoaded', () => {
 
   // global variables; items in the basket, basket running subtotal
@@ -47,7 +8,6 @@ window.addEventListener('DOMContentLoaded', () => {
   (function () {
     item_options.forEach(element => {
       document.getElementById('options').innerHTML += `<li class="options__item" data-id="${element.id}">${element.item_name}</li>`;
-
     });
 
     for (element of document.getElementsByClassName('options__item')) {
@@ -55,6 +15,10 @@ window.addEventListener('DOMContentLoaded', () => {
         addToBasket(this.dataset.id);
       });
     }
+
+    document.getElementById('calculate-total').addEventListener('click', function() {
+      calculateBasket();
+    });
   })();
 
   // function; adds an item to the basket
@@ -110,4 +74,106 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }
   }
+
+  function calculateBasket() {
+    let savingsItems = [];
+
+    if (userBasket.length) {
+      userBasket.forEach(basketElement => {
+        let isItemOnOffer = item_offers.find(itemOffersElement => itemOffersElement.item_id == basketElement.id);
+
+        if (isItemOnOffer) {
+          let offerItem = savingsItems.find(savingsElement => savingsElement.item_id == basketElement.id);
+
+          if (offerItem) {
+            offerItem.item_count = ++offerItem.item_count;
+          } else {
+            savingsItems.push({
+              item_id: basketElement.id,
+              item_price: basketElement.price_per_item,
+              item_count: 1
+            });
+          }
+        }
+
+      });
+
+      savingsItems.forEach(savingsElement => {
+        let itemOffer = item_offers.find(itemOffersElement => itemOffersElement.item_id == savingsElement.item_id);
+
+        savingsElement['offer_name'] = itemOffer.offer_name;
+        savingsElement['offer_value'] = itemOffer.savings(savingsElement.item_count, savingsElement.item_price);
+      });
+
+      console.log('savingsItems', savingsItems);
+    }
+  }
 });
+
+// Faux API item data
+const item_options = [
+  {
+    id: 1,
+    item_name: 'Coca-Cola',
+    price_per_item: 0.70,
+    is_weighed_item: false,
+    price_per_weight: 0
+  },
+  {
+    id: 2,
+    item_name: 'Beans',
+    price_per_item: 0.50,
+    is_weighed_item: false,
+    price_per_weight: 0
+  },
+  {
+    id: 3,
+    item_name: 'Onions',
+    price_per_item: 0,
+    is_weighed_item: true,
+    price_per_weight: 0.29
+  },
+  {
+    id: 4,
+    item_name: 'Ale',
+    price_per_item: 2.50,
+    is_weighed_item: false,
+    price_per_weight: 0
+  },
+  {
+    id: 5,
+    item_name: 'Oranges',
+    price_per_item: 0,
+    is_weighed_item: true,
+    price_per_weight: 1.99
+  }
+];
+
+const item_offers = [
+  {
+    id: 1,
+    item_id: 2,
+    offer_name: 'Beans 3 for 2',
+    savings: function(itemCount, pricePerItem) {
+      let savings;
+
+      let count = Math.trunc(itemCount/3);
+      savings = count * pricePerItem;
+
+      return savings;
+    }
+  },
+  {
+    id: 2,
+    item_id: 1,
+    offer_name: '2 Cans of Coca-cola for £1',
+    savings: function(itemCount, pricePerItem) {
+      let savings;
+
+      let count = Math.trunc(itemCount/2);
+      savings = count * (pricePerItem - 0.30);
+
+      return savings;
+    }
+  }
+];
