@@ -1,7 +1,7 @@
 window.addEventListener('DOMContentLoaded', () => {
 
   // global variables; items in the basket
-  var userBasket = [];
+  var basket = [];
 
   // Fake API call; populate the item options on program init on program init
   (function () {
@@ -18,88 +18,87 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
-  // function; adds an item to the basket
+  // function; adds an item to the basket on item option click in UI
   function addToBasket(item_id) {
-    const weightInputElem = document.getElementById('weight');
-    const weightInput = weightInputElem.value;
+    const weightInputElement = document.getElementById('weight');
+    const weightInput = weightInputElement.value;
 
     // Fake API call; GET item data of item added to basket
-    let itemData = item_options.find(element => element.id == item_id);
+    let itemData = item_options.find(item => item.id == item_id);
 
     if (!itemData.price_per_weight || (itemData.price_per_weight && weightInput)) {
       Object.assign(itemData, weightInput ? {
         input_weight: +weightInput,
         weighed_price: +weightInput * itemData.price_per_weight
       } : {});
-      userBasket.push(itemData);
+      basket.push(itemData);
 
       if (weightInput) {
-        weightInputElem.value = '';
+        weightInputElement.value = '';
       }
 
       refreshBasket();
     }
   }
 
-  // function; removes an item from the basket
-  function removeFromBasket(elementPos) {
-    userBasket.splice(elementPos, 1);
+  // function; removes an item from the basket on basket item click in UI
+  function removeFromBasket(elementPosition) {
+    basket.splice(elementPosition, 1);
     refreshBasket();
   }
 
-  // function; refreshes the items in the basket and the running subtotal
+  // function; refreshes the items in the basket and the subtotal
   function refreshBasket() {
-    const basketElem = document.getElementById('basket');
-    const subTotalElem = document.getElementById('subtotal');
-    subTotalElem.textContent = '';
+    const basketElement = document.getElementById('basket');
+    const subTotalElement = document.getElementById('subtotal');
+    let subtotal = 0;
 
-    let basketSubtotal = 0;
-    basketElem.innerHTML = '';
+    basketElement.innerHTML = '';
+    subTotalElement.textContent = '';
 
-    userBasket.forEach(element => {
-      const price = element.is_weighed_item ? element.weighed_price : element.price_per_item;
+    basket.forEach(basketItem => {
+      const itemPrice = basketItem.is_weighed_item ? basketItem.weighed_price : basketItem.price_per_item;
 
       document.getElementById('basket').innerHTML += `<li class="basket__item">
-          ${element.item_name} ${element.is_weighed_item ? `${element.input_weight}kg` : '' } - £${price.toFixed(2)}
+          ${basketItem.item_name} ${basketItem.is_weighed_item ? `${basketItem.input_weight}kg` : '' } - £${itemPrice.toFixed(2)}
         </li>`;
-      basketSubtotal += price
+      subtotal += itemPrice
     });
 
-    subTotalElem.textContent = `£${basketSubtotal.toFixed(2).toString()}`;
+    subTotalElement.textContent = `£${subtotal.toFixed(2).toString()}`;
 
     for (element of document.getElementsByClassName('basket__item')) {
       element.addEventListener('click', function() {
-        removeFromBasket(Array.prototype.indexOf.call(basketElem.children, this));
+        removeFromBasket(Array.prototype.indexOf.call(basketElement.children, this));
       });
     }
-    calculateBasket(basketSubtotal);
+    calculateBasket(subtotal);
   }
 
-  function calculateBasket(basketSubtotal) {
+  function calculateBasket(subtotal) {
     let savingsItems = [];
     let totalSavings = 0;
     let total = 0;
 
     document.getElementById('savings').innerHTML = '';
 
-    if (userBasket.length) {
-      userBasket.forEach(basketElement => {
-        let isItemOnOffer = item_offers.find(itemOffersElement => itemOffersElement.item_id.includes(basketElement.id));
+    if (basket.length) {
+      basket.forEach(basketItem => {
+        let itemOnOffer = item_offers.find(itemOffer => itemOffer.item_id.includes(basketItem.id));
 
-        if (isItemOnOffer) {
-          let offerItem = savingsItems.find(savingsElement => savingsElement.item_offer_id == isItemOnOffer.id);
+        if (itemOnOffer) {
+          let savingsOffer = savingsItems.find(savingsOfferItem => savingsOfferItem.item_offer_id == itemOnOffer.id);
 
-          if (offerItem) {
-            offerItem.item_count = ++offerItem.item_count;
+          if (savingsOffer) {
+            savingsOffer.item_count = ++savingsOffer.item_count;
           } else {
             savingsItems.push({
-              item_offer_id: isItemOnOffer.id,
-              item_price: basketElement.price_per_item,
+              item_offer_id: itemOnOffer.id,
+              item_price: basketItem.price_per_item,
               item_count: 1
             });
           }
         }
-
       });
 
       savingsItems.forEach(savingsElement => {
@@ -119,11 +118,11 @@ window.addEventListener('DOMContentLoaded', () => {
             </li>`;
         }
       });
-
-      document.getElementById('savings-total').textContent = `£${totalSavings.toFixed(2).toString()}`;
-      total = basketSubtotal - totalSavings;
-      document.getElementById('total').textContent = `£${total.toFixed(2).toString()}`;
     }
+
+    document.getElementById('savings-total').textContent = `£${totalSavings.toFixed(2).toString()}`;
+    total = subtotal - totalSavings;
+    document.getElementById('total').textContent = `£${total.toFixed(2).toString()}`;
   }
 });
 
@@ -201,8 +200,8 @@ const item_offers = [
     offer_name: 'Beans 3 for 2',
     savings: function(itemCount, pricePerItem) {
       let savings;
-
       let count = Math.trunc(itemCount/3);
+
       savings = count * pricePerItem;
 
       return {
@@ -217,8 +216,8 @@ const item_offers = [
     offer_name: '2 Cans of Coca-cola for £1',
     savings: function(itemCount, pricePerItem) {
       let savings;
-
       let count = Math.trunc(itemCount/2);
+
       savings = count * (pricePerItem - 0.30);
 
       return {
@@ -233,8 +232,8 @@ const item_offers = [
     offer_name: 'Any 3 ales for £6',
     savings: function(itemCount, pricePerItem) {
       let savings;
-
       let count = Math.trunc(itemCount/3);
+
       savings = count * (pricePerItem - 1);
 
       return {
