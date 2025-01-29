@@ -4,6 +4,7 @@
 
 - I coded this exercise without the prior planning I'd usually do, so it represents my thought process as opposed to what I think is a perfect answer (which this isn't).
 - I coded a very basic UI to accompany the calculations even though it wasn't required, I thought it would be almost as much effort to code to the console as making a basic UI. I also haven't coded vanilla JS in several months and so I took the opportunity to refresh my memory!
+- The code that actually solves the exercise is found from line 95 onwards in the scripts.js file.
 
 ## How to use
 
